@@ -1,6 +1,12 @@
 import server from "./server";
 
-function Wallet({ address, setAddress, balance, setBalance }) {
+function Wallet({
+  headerText,
+  address,
+  setAddress,
+  balance,
+  setBalance
+}) {
   async function onChange(evt) {
     const address = evt.target.value;
     setAddress(address);
@@ -11,12 +17,12 @@ function Wallet({ address, setAddress, balance, setBalance }) {
       setBalance(balance);
     } else {
       setBalance(0);
-    }
+    } 
   }
 
   return (
     <div className="container wallet">
-      <h1>Your Wallet</h1>
+      <h2>{headerText}</h2>
 
       <label>
         Wallet Address

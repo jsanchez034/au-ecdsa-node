@@ -1,27 +1,74 @@
 import { useState } from "react";
-import server from "./server";
+import clsx from 'clsx';
 
-function Transfer({ address, setBalance }) {
+import server from "./server";
+import { toHex } from "ethereum-cryptography/utils.js";
+import hashMessage from './utils/hasMessage';
+
+function Transfer({
+  senderAddress,
+  setSenderBalance,
+  recipientAddress,
+  setRecipientBalance
+}) {
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
   const [sendAmount, setSendAmount] = useState("");
-  const [recipient, setRecipient] = useState("");
+  const [signature, setSignature] = useState("");
+  const [recoveryBit, setRecoveryBit] = useState("");
 
   const setValue = (setter) => (evt) => setter(evt.target.value);
+
+  const messsageToSign = `Send ${sendAmount} from ${senderAddress} to ${recipientAddress}`
+  const hashedMessage = hashMessage(messsageToSign);
+  const hashedMessageHex = toHex(hashedMessage);
 
   async function transfer(evt) {
     evt.preventDefault();
 
     try {
+      setIsSendingRequest(true);
       const {
-        data: { balance },
+        data: {
+          senderBalance,
+          recipientBalance
+        },
       } = await server.post(`send`, {
-        sender: address,
+        sender: senderAddress,
         amount: parseInt(sendAmount),
-        recipient,
+        recipient: recipientAddress,
+        hashedMessage: hashedMessageHex,
+        signature,
+        recoveryBit
       });
-      setBalance(balance);
+      setSenderBalance(senderBalance);
+      setRecipientBalance(recipientBalance)
+
+      alert('Transaction Complete!');
     } catch (ex) {
       alert(ex.response.data.message);
+    } finally {
+      setIsSendingRequest(false);
     }
+  }
+
+  const inputClasses = clsx('button', {
+    'loading' : isSendingRequest
+  });
+
+  const onCopyTranHash = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const body = document.querySelector('body');
+    const paragraph = document.querySelector('#txhash');
+    const area = document.createElement('textarea');
+    body.appendChild(area);
+
+    area.value = paragraph.innerText;
+    area.select();
+    document.execCommand("copy");
+
+    body.removeChild(area);
   }
 
   return (
@@ -38,15 +85,29 @@ function Transfer({ address, setBalance }) {
       </label>
 
       <label>
-        Recipient
-        <input
-          placeholder="Type an address, for example: 0x2"
-          value={recipient}
-          onChange={setValue(setRecipient)}
-        ></input>
+        Transaction Message
+        <p>{messsageToSign}</p>
       </label>
 
-      <input type="submit" className="button" value="Transfer" />
+      <label>
+        Transaction Message Hash To Sign
+        <div className="copyTranHashWrap">
+          <p id="txhash">{hashedMessageHex}</p>
+          <button onClick={onCopyTranHash}>📋</button>
+        </div>
+      </label>
+
+      <label>
+        Transaction Message Signature
+        <input value={signature} onChange={setValue(setSignature)}></input>
+      </label>
+
+      <label>
+        Signature Recovery Bit
+        <input value={recoveryBit} onChange={setValue(setRecoveryBit)}></input>
+      </label>
+
+      <input disabled={isSendingRequest} className={inputClasses} type="submit" value={isSendingRequest ? '...' : 'Transfer'} />
     </form>
   );
 }
