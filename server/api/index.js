@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 
-import recoverEthPublicKeyFromMessage from './utils/recoverEthPublicKeyFromMessage.js';
+import recoverEthPublicKeyFromMessage from '../utils/recoverEthPublicKeyFromMessage.js';
 
 const app = express();
 const port = process.env.NODE_ENV === 'production' ? 80 : 3042;
@@ -15,13 +15,13 @@ const balances = {
   "86bbcd9324041c3bbf56f6f66bf374a5943e3f2d": 75,
 };
 
-app.get("/balance/:address", (req, res) => {
+app.get("/api/balance/:address", (req, res) => {
   const { address } = req.params;
   const balance = balances[address] || 0;
   res.send({ balance });
 });
 
-app.post("/send", (req, res) => {
+app.post("/api/send", (req, res) => {
   const {
     sender,
     recipient,
