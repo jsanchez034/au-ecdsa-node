@@ -1,12 +1,10 @@
 import express from "express";
 import cors from "cors";
-import { toHex } from "ethereum-cryptography/utils.js";
 
 import recoverEthPublicKeyFromMessage from './utils/recoverEthPublicKeyFromMessage.js';
-import publicKeyToEthPublicKey from './utils/publicKeyToEthPublicKey.js';
 
 const app = express();
-const port = 3042;
+const port = process.env.NODE_ENV === 'production' ? 80 : 3042;
 
 app.use(cors());
 app.use(express.json());
